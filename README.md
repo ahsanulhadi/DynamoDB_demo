@@ -12,7 +12,8 @@ Status: This version is working fine. Need to add 3 more API action method.
 Language: Java 
 --> jdk-1.8.0_25, jre-1.8.0_25, AWS SDK for Java 1.9.7 (comes with AWS Toolkit for Eclipse)
 Database: Amazon DynamoDB 
---> API Version 2012-08-10 </pre>
+--> API Version 2012-08-10 
+OS: Windows 8 (64bit) </pre>
 
 (1) Description:
 ---------------------
@@ -60,6 +61,20 @@ First go to http://download.eclipse.org/releases/helios (or your Eclipse version
 Solution source: http://stackoverflow.com/questions/21847788/cannot-install-aws-toolkit-for-eclipse-how-to-fix-these-errors)
 
 Getting Started with AWS Toolkit: http://docs.aws.amazon.com/AWSToolkitEclipse/latest/GettingStartedGuide/Welcome.html
+
+(3) AWS Credential setting:
+You have to create the credentials in IAM. Detail:
+http://docs.aws.amazon.com/IAM/latest/UserGuide/IAM_Introduction.html
+
+For this demo, the default credential file is used that is located in:
+C:\Users\<user name>\.aws\credentials    [For Windows]
+
+sample entry:
+
+[<alias user name>]
+aws_access_key_id=<IAM access key>
+aws_secret_access_key=<IAM secret key>
+
 
 Note:
 ----------------
