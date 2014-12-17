@@ -63,15 +63,17 @@ Solution source: http://stackoverflow.com/questions/21847788/cannot-install-aws-
 Getting Started with AWS Toolkit: http://docs.aws.amazon.com/AWSToolkitEclipse/latest/GettingStartedGuide/Welcome.html
 
 (3) AWS Credential setting:
+---------------------
 You have to create the credentials in IAM. Detail:
 http://docs.aws.amazon.com/IAM/latest/UserGuide/IAM_Introduction.html
 
 For this demo, the default credential file is used that is located in:
+
 C:\Users\<user name>\.aws\credentials    [For Windows]
 
 sample entry:
 
-[<alias user name>]
+[alias user name]
 aws_access_key_id=<IAM access key>
 aws_secret_access_key=<IAM secret key>
 
