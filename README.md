@@ -13,7 +13,7 @@ Language: Java
 --> jdk-1.8.0_25, jre-1.8.0_25, AWS SDK for Java 1.9.7 (comes with AWS Toolkit for Eclipse)
 Database: Amazon DynamoDB 
 --> API Version 2012-08-10 
-OS: Windows 8 (64bit) </pre>
+OS: Windows 8 (64bit)</pre>
 
 (1) Description:
 ---------------------
@@ -73,11 +73,11 @@ C:\Users\<user name>\.aws\credentials    [For Windows]
 
 sample entry:
 
-`[alias user name]
+<pre>[alias user name]
 
 aws_access_key_id=<IAM access key>
 
-aws_secret_access_key=<IAM secret key>`
+aws_secret_access_key=<IAM secret key></pre>
 
 
 Note:
