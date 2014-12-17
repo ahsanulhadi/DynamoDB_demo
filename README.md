@@ -74,7 +74,9 @@ C:\Users\<user name>\.aws\credentials    [For Windows]
 sample entry:
 
 `[alias user name]
+
 aws_access_key_id=<IAM access key>
+
 aws_secret_access_key=<IAM secret key>`
 
 
