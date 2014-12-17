@@ -5,7 +5,7 @@ Demo of Amazon DynamoDB Operations
 Demo of DynamoDB provided all Low Level API actions and how to do operations.
 -
 By: Ahsanul Hadi
-Email: ahsanulhadi.dsi@gmail.com, adil.gt@gmail.com
+Email: adil.gt@gmail.com
 Published on: 05-Dec-2014
 Status: This version is working fine. Need to add 3 more API action method.
 - 
@@ -72,11 +72,11 @@ For this demo, the default credential file is used that is located in:
 C:\Users\<user name>\.aws\credentials    [For Windows]
 
 sample entry:
-<pre>
+
 [alias user name]
 aws_access_key_id=<IAM access key>
 aws_secret_access_key=<IAM secret key>
-</pre>
+
 
 Note:
 ----------------
