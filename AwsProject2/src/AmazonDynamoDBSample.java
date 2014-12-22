@@ -75,41 +75,6 @@ public class AmazonDynamoDBSample {
 
     static AmazonDynamoDBClient dynamoDB;
     static String tableName = "ProductOrder";
-	static String[] ProductId_list= new String[]{"M001","M002","P001"}; 
-
-	static String PaymentHistory = "[" 			   
-			+   "{"
-			+   "\"PaymentDate\" :\"2014.11.15\" ,"
-			+   "\"Amount\" : 3200 ,"
-			+   "\"PaymentMethod\" : \"Cash\""
-			+   "},"
-			+   "{"
-			+   "\"PaymentDate\" :\"2014.11.20\" ,"
-			+   "\"Amount\" : 28000 ,"
-			+   "\"PaymentMethod\" : \"Cheque\" ,"
-			+   "\"ChequeNo\" : \"SB1435-0786-123\" ,"
-			+   "\"BankName\" : \"Dutch Bangla Bank\""
-			+   "}"						
-			+ "],";
-
-	static String CompanyContacts ="[" 			   
-			+   "{"
-			+   "\"Name\" :\"Rafik\" ,"
-			+   "\"Designation\" :\"Sales Manager\" ,"
-			+   "\"ContactNo\" : \"01912433566\""
-			+   "},"
-			+   "{"
-			+   "\"Name\" :\"Karim\" ,"
-			+   "\"Designation\" :\"Sales Executive\" ,"
-			+   "\"ContactNo\" : \"01912433567\""
-			+   "}"
-			+ "],";
-
-	static String CompanyAddress = "{"
-			+   "\"Street\": \"12/A, xyz road, ABC area ...\","
-			+   "\"City\":\"Dhaka\","
-			+   "\"Country\": \"Bangladesh\""
-			+   "},";
 	
     /*
      * The only information needed to create a client are security credentials
@@ -571,6 +536,43 @@ public class AmazonDynamoDBSample {
     	/*
     	 * Creates a new item. If an item with the same key already exists in the table, it is replaced with the new item. 
     	 */
+    	
+    	String[] ProductId_list= new String[]{"M001","M002","P001"}; 
+
+    	String PaymentHistory = "[" 			   
+    			+   "{"
+    			+   "\"PaymentDate\" :\"2014.11.15\" ,"
+    			+   "\"Amount\" : 3200 ,"
+    			+   "\"PaymentMethod\" : \"Cash\""
+    			+   "},"
+    			+   "{"
+    			+   "\"PaymentDate\" :\"2014.11.20\" ,"
+    			+   "\"Amount\" : 28000 ,"
+    			+   "\"PaymentMethod\" : \"Cheque\" ,"
+    			+   "\"ChequeNo\" : \"SB1435-0786-123\" ,"
+    			+   "\"BankName\" : \"Dutch Bangla Bank\""
+    			+   "}"						
+    			+ "],";
+
+    	String CompanyContacts ="[" 			   
+    			+   "{"
+    			+   "\"Name\" :\"Rafik\" ,"
+    			+   "\"Designation\" :\"Sales Manager\" ,"
+    			+   "\"ContactNo\" : \"01912433566\""
+    			+   "},"
+    			+   "{"
+    			+   "\"Name\" :\"Karim\" ,"
+    			+   "\"Designation\" :\"Sales Executive\" ,"
+    			+   "\"ContactNo\" : \"01912433567\""
+    			+   "}"
+    			+ "],";
+
+    	String CompanyAddress = "{"
+    			+   "\"Street\": \"12/A, xyz road, ABC area ...\","
+    			+   "\"City\":\"Dhaka\","
+    			+   "\"Country\": \"Bangladesh\""
+    			+   "},";
+
     			
     	PutItemRequest itemRequest;
     	PutItemResult putItemResult;
@@ -629,6 +631,42 @@ public class AmazonDynamoDBSample {
     	 * IF we want to update DeliveryStatus = Delivered 
     	 * THEN for that record (orderID) Due cannot be > 0 . IF Due > 0 then don't allow the update.  
     	 */
+    	String[] ProductId_list= new String[]{"M001","M002","P001"}; 
+
+    	String PaymentHistory = "[" 			   
+    			+   "{"
+    			+   "\"PaymentDate\" :\"2014.11.15\" ,"
+    			+   "\"Amount\" : 3200 ,"
+    			+   "\"PaymentMethod\" : \"Cash\""
+    			+   "},"
+    			+   "{"
+    			+   "\"PaymentDate\" :\"2014.11.20\" ,"
+    			+   "\"Amount\" : 28000 ,"
+    			+   "\"PaymentMethod\" : \"Cheque\" ,"
+    			+   "\"ChequeNo\" : \"SB1435-0786-123\" ,"
+    			+   "\"BankName\" : \"Dutch Bangla Bank\""
+    			+   "}"						
+    			+ "],";
+
+    	String CompanyContacts ="[" 			   
+    			+   "{"
+    			+   "\"Name\" :\"Rafik\" ,"
+    			+   "\"Designation\" :\"Sales Manager\" ,"
+    			+   "\"ContactNo\" : \"01912433566\""
+    			+   "},"
+    			+   "{"
+    			+   "\"Name\" :\"Karim\" ,"
+    			+   "\"Designation\" :\"Sales Executive\" ,"
+    			+   "\"ContactNo\" : \"01912433567\""
+    			+   "}"
+    			+ "],";
+
+    	String CompanyAddress = "{"
+    			+   "\"Street\": \"12/A, xyz road, ABC area ...\","
+    			+   "\"City\":\"Dhaka\","
+    			+   "\"Country\": \"Bangladesh\""
+    			+   "},";
+
     	
     	PutItemRequest itemRequest;
     	PutItemResult putItemResult;
@@ -704,7 +742,42 @@ public class AmazonDynamoDBSample {
     		- Any individual item in a batch exceeds 400 KB.
     		- The total request size exceeds 16 MB.
     	*/
-    	
+    	String[] ProductId_list= new String[]{"M001","M002","P001"}; 
+
+    	String PaymentHistory = "[" 			   
+    			+   "{"
+    			+   "\"PaymentDate\" :\"2014.11.15\" ,"
+    			+   "\"Amount\" : 3200 ,"
+    			+   "\"PaymentMethod\" : \"Cash\""
+    			+   "},"
+    			+   "{"
+    			+   "\"PaymentDate\" :\"2014.11.20\" ,"
+    			+   "\"Amount\" : 28000 ,"
+    			+   "\"PaymentMethod\" : \"Cheque\" ,"
+    			+   "\"ChequeNo\" : \"SB1435-0786-123\" ,"
+    			+   "\"BankName\" : \"Dutch Bangla Bank\""
+    			+   "}"						
+    			+ "],";
+
+    	String CompanyContacts ="[" 			   
+    			+   "{"
+    			+   "\"Name\" :\"Rafik\" ,"
+    			+   "\"Designation\" :\"Sales Manager\" ,"
+    			+   "\"ContactNo\" : \"01912433566\""
+    			+   "},"
+    			+   "{"
+    			+   "\"Name\" :\"Karim\" ,"
+    			+   "\"Designation\" :\"Sales Executive\" ,"
+    			+   "\"ContactNo\" : \"01912433567\""
+    			+   "}"
+    			+ "],";
+
+    	String CompanyAddress = "{"
+    			+   "\"Street\": \"12/A, xyz road, ABC area ...\","
+    			+   "\"City\":\"Dhaka\","
+    			+   "\"Country\": \"Bangladesh\""
+    			+   "},";
+
 		long orderDate;
 		String DeliveryDate;
 		String hashItemName = "OrderId"; // will be used as HASH Key
