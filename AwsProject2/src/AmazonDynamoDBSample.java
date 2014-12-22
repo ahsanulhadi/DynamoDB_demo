@@ -35,6 +35,7 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 //import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
 import com.amazonaws.services.dynamodbv2.util.Tables;
 import com.amazonaws.services.dynamodbv2.model.*;
+import com.amazonaws.services.dynamodbv2.document.*;
 
 /*
 import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
@@ -93,13 +94,14 @@ public class AmazonDynamoDBSample {
     {
         init();
         /* ------- Example: MANAGE Table ------- */ 
-        createTable(tableName); 		// Working OK. 
+        //createTable(tableName); 		// Working OK. 
         //describeTable(tableName);   	// Working OK.
         //updateTable(tableName);		// Working OK.
         //listTable();     				// Working OK.
         //deleteTable(tableName);		// Working OK.
         
         /*  -------- CRUD Operations ------------ */ 
+        // examples:  http://docs.amazonaws.cn/en_us/amazondynamodb/latest/developerguide/LowLevelJavaCRUDExample.html
         
         /*  -------  Example: MODIFY Data  ------- */
         //addItems(tableName);   					// Working OK. 
@@ -109,12 +111,13 @@ public class AmazonDynamoDBSample {
         
         /*  -------  Example: READ Data  -------  */
         //getItem(tableName, "101", "20141201090909");   // getItem(String tableName, String Id, String Orderdate)
+        batchGetItem(tableName);
         //scanItems(tableName);    		// Working OK.    
         
-        // Values for queryItem Index: index_CompanyName, index_DeliveryDate, null
-        queryItems(tableName, "index_DeliveryDate"); // Working OK. 
-        queryItems(tableName, "index_CompanyName");  // Working OK.
-        queryItems(tableName, null); 				// Working OK.
+        // -> Values for queryItem Index: index_CompanyName, index_DeliveryDate, null
+        //queryItems(tableName, "index_DeliveryDate"); // Working OK. 
+        //queryItems(tableName, "index_CompanyName");  // Working OK.
+        //queryItems(tableName, null); 				// Working OK.
         
     }
 
@@ -539,36 +542,8 @@ public class AmazonDynamoDBSample {
     	
     	String[] ProductId_list= new String[]{"M001","M002","P001"}; 
 
-    	String PaymentHistory = "[" 			   
-    			+   "{"
-    			+   "\"PaymentDate\" :\"2014.11.15\" ,"
-    			+   "\"Amount\" : 3200 ,"
-    			+   "\"PaymentMethod\" : \"Cash\""
-    			+   "},"
-    			+   "{"
-    			+   "\"PaymentDate\" :\"2014.11.20\" ,"
-    			+   "\"Amount\" : 28000 ,"
-    			+   "\"PaymentMethod\" : \"Cheque\" ,"
-    			+   "\"ChequeNo\" : \"SB1435-0786-123\" ,"
-    			+   "\"BankName\" : \"Dutch Bangla Bank\""
-    			+   "}"						
-    			+ "],";
-
-    	String CompanyContacts ="[" 			   
-    			+   "{"
-    			+   "\"Name\" :\"Rafik\" ,"
-    			+   "\"Designation\" :\"Sales Manager\" ,"
-    			+   "\"ContactNo\" : \"01912433566\""
-    			+   "},"
-    			+   "{"
-    			+   "\"Name\" :\"Karim\" ,"
-    			+   "\"Designation\" :\"Sales Executive\" ,"
-    			+   "\"ContactNo\" : \"01912433567\""
-    			+   "}"
-    			+ "],";
-
     	String CompanyAddress = "{"
-    			+   "\"Street\": \"12/A, xyz road, ABC area ...\","
+    			+   "\"Street\": \"Road #1, Section #1, ABC Area. Post Code: 1001.\","
     			+   "\"City\":\"Dhaka\","
     			+   "\"Country\": \"Bangladesh\""
     			+   "},";
@@ -588,9 +563,8 @@ public class AmazonDynamoDBSample {
 			// someFunction(AuthorList);
 			
 			/*
-			newItem(int OrderId, int OrderDate, String[] ProductId_list, String DeliveryDate, String DeliveryStatus, 
-		    		String DeliveredBy, int DeliveryCost, int DiscountAmount, String TotalCost, String json_PaymentHistory,
-		    		int Due, String CompanyName, String json_CompanyContacts, String json_CompanyAddress, boolean Flagged) 
+			newItem(int OrderId, int OrderDate, String[] ProductId_list, String DeliveryDate, String DeliveryStatus, String DeliveredBy, 
+					int DeliveryCost, int DiscountAmount, String TotalCost, int Due, String CompanyName, String json_CompanyAddress, boolean Flagged) 
 		    */
 			// Sample item #1
 			// Sample status = Delivered, Pending, Halt, Returned, Missing ....
@@ -600,9 +574,8 @@ public class AmazonDynamoDBSample {
 			long orderDate = 20141201090909L;
 			String DeliveryDate = "20141125";
 			
-        	item = newItem(101, orderDate, ProductId_list, DeliveryDate, "Pending",
-        			"S.A. Paribahan", 20, 0, "1000", PaymentHistory,
-        			200, "ABC Stationary Shop", CompanyContacts, CompanyAddress, false);
+        	item = newItem(101, orderDate, ProductId_list, DeliveryDate, "Pending", "S.A. Paribahan", 
+        			20, 0, "1000", 200, "ABC Stationary Shop", CompanyAddress, false);
         	
             itemRequest = new PutItemRequest(tableName, item);
             putItemResult= dynamoDB.putItem(itemRequest);
@@ -633,39 +606,12 @@ public class AmazonDynamoDBSample {
     	 */
     	String[] ProductId_list= new String[]{"M001","M002","P001"}; 
 
-    	String PaymentHistory = "[" 			   
-    			+   "{"
-    			+   "\"PaymentDate\" :\"2014.11.15\" ,"
-    			+   "\"Amount\" : 3200 ,"
-    			+   "\"PaymentMethod\" : \"Cash\""
-    			+   "},"
-    			+   "{"
-    			+   "\"PaymentDate\" :\"2014.11.20\" ,"
-    			+   "\"Amount\" : 28000 ,"
-    			+   "\"PaymentMethod\" : \"Cheque\" ,"
-    			+   "\"ChequeNo\" : \"SB1435-0786-123\" ,"
-    			+   "\"BankName\" : \"Dutch Bangla Bank\""
-    			+   "}"						
-    			+ "],";
-
-    	String CompanyContacts ="[" 			   
-    			+   "{"
-    			+   "\"Name\" :\"Rafik\" ,"
-    			+   "\"Designation\" :\"Sales Manager\" ,"
-    			+   "\"ContactNo\" : \"01912433566\""
-    			+   "},"
-    			+   "{"
-    			+   "\"Name\" :\"Karim\" ,"
-    			+   "\"Designation\" :\"Sales Executive\" ,"
-    			+   "\"ContactNo\" : \"01912433567\""
-    			+   "}"
-    			+ "],";
-
     	String CompanyAddress = "{"
-    			+   "\"Street\": \"12/A, xyz road, ABC area ...\","
+    			+   "\"Street\": \"Road #1, Section #1, ABC Area. Post Code: 1001.\","
     			+   "\"City\":\"Dhaka\","
     			+   "\"Country\": \"Bangladesh\""
     			+   "},";
+
 
     	
     	PutItemRequest itemRequest;
@@ -681,13 +627,11 @@ public class AmazonDynamoDBSample {
 			
 			long orderDate = 20141201090909L;   // 20141102102003
 			/*
-			newItem(int OrderId, int OrderDate, String json_ProductList, String DeliveryDate, String DeliveryStatus, 
-		    		String DeliveredBy, int DeliveryCost, int DiscountAmount, String TotalCost, String json_PaymentHistory,
-		    		int Due, String CompanyName, String json_CompanyContacts, String json_CompanyAddress, boolean Flagged) 
+			newItem(int OrderId, int OrderDate, String[] ProductId_list, String DeliveryDate, String DeliveryStatus, String DeliveredBy, 
+					int DeliveryCost, int DiscountAmount, String TotalCost, int Due, String CompanyName, String json_CompanyAddress, boolean Flagged) 
 		    */
-        	item = newItem(101, orderDate, ProductId_list, GetCurrentDateTime(), "Delivered",
-        			"S.A. Paribahan", 100, 0, "1000", PaymentHistory,
-        			0, "XYZ Stationary Shop", CompanyContacts, CompanyAddress, false);
+        	item = newItem(101, orderDate, ProductId_list, GetCurrentDateTime(), "Delivered", "S.A. Paribahan", 
+        			100, 0, "1000", 0, "XYZ Stationary Shop", CompanyAddress, false);
         	
 			Map<String, AttributeValue> expressionAttributeValues = new HashMap<String, AttributeValue>(); // for condition expression.
 			// expressionAttributeValues.put(":val", new AttributeValue().withS("Delivered")); // for Delivery Status.  
@@ -744,36 +688,8 @@ public class AmazonDynamoDBSample {
     	*/
     	String[] ProductId_list= new String[]{"M001","M002","P001"}; 
 
-    	String PaymentHistory = "[" 			   
-    			+   "{"
-    			+   "\"PaymentDate\" :\"2014.11.15\" ,"
-    			+   "\"Amount\" : 3200 ,"
-    			+   "\"PaymentMethod\" : \"Cash\""
-    			+   "},"
-    			+   "{"
-    			+   "\"PaymentDate\" :\"2014.11.20\" ,"
-    			+   "\"Amount\" : 28000 ,"
-    			+   "\"PaymentMethod\" : \"Cheque\" ,"
-    			+   "\"ChequeNo\" : \"SB1435-0786-123\" ,"
-    			+   "\"BankName\" : \"Dutch Bangla Bank\""
-    			+   "}"						
-    			+ "],";
-
-    	String CompanyContacts ="[" 			   
-    			+   "{"
-    			+   "\"Name\" :\"Rafik\" ,"
-    			+   "\"Designation\" :\"Sales Manager\" ,"
-    			+   "\"ContactNo\" : \"01912433566\""
-    			+   "},"
-    			+   "{"
-    			+   "\"Name\" :\"Karim\" ,"
-    			+   "\"Designation\" :\"Sales Executive\" ,"
-    			+   "\"ContactNo\" : \"01912433567\""
-    			+   "}"
-    			+ "],";
-
     	String CompanyAddress = "{"
-    			+   "\"Street\": \"12/A, xyz road, ABC area ...\","
+    			+   "\"Street\": \"Road #1, Section #1, ABC Area. Post Code: 1001.\","
     			+   "\"City\":\"Dhaka\","
     			+   "\"Country\": \"Bangladesh\""
     			+   "},";
@@ -800,25 +716,25 @@ public class AmazonDynamoDBSample {
     		forumItem.put("Name", new AttributeValue().withS("Amazon RDS"));
     		forumItem.put("Threads", new AttributeValue().withN("0"));
     		*/
-			/*
-			newItem(int OrderId, int OrderDate, String[] ProductId_list, String DeliveryDate, String DeliveryStatus, 
-		    		String DeliveredBy, int DeliveryCost, int DiscountAmount, String TotalCost, String json_PaymentHistory,
-		    		int Due, String CompanyName, String json_CompanyContacts, String json_CompanyAddress, boolean Flagged) 
-		    */
-    		orderDate = 20141201101010L;
+
+    		orderDate = 20141202094500L;
     		DeliveryDate = "20141220";
-    		
-        	item = newItem(201, orderDate, ProductId_list, DeliveryDate, "Pending",
-        			"S.A. Paribahan", 20, 0, "1000", PaymentHistory,
-        			0, "ABC Stationary Shop", CompanyContacts, CompanyAddress, false);
+
+			/*
+			newItem(int OrderId, int OrderDate, String[] ProductId_list, String DeliveryDate, String DeliveryStatus, String DeliveredBy, 
+					int DeliveryCost, int DiscountAmount, String TotalCost, int Due, String CompanyName, String json_CompanyAddress, boolean Flagged) 
+		    */
+        	item = newItem(102, orderDate, ProductId_list, DeliveryDate, "Delivered", "S.A. Paribahan", 
+        			100, 0, "3000", 0, "ABC Stationary Shop", CompanyAddress, false);
+        	
     		jobList.add(new WriteRequest().withPutRequest(new PutRequest().withItem(item)));
     		
-    		orderDate = 20141201111010L;
-    		DeliveryDate = "20141225";
+    		orderDate = 20141201094500L;
+    		DeliveryDate = "20141220";
     		
-        	item = newItem(202, orderDate, ProductId_list, DeliveryDate, "Pending",
-        			"S.A. Paribahan", 100, 0, "5000", PaymentHistory,
-        			0, "XYZ Stationary Shop", CompanyContacts, CompanyAddress, false);
+        	item = newItem(103, orderDate, ProductId_list, DeliveryDate, "Delivered", "S.A. Paribahan", 
+        			0, 0, "3000", 0, "ABC Stationary Shop", CompanyAddress, false);
+        	
     		jobList.add(new WriteRequest().withPutRequest(new PutRequest().withItem(item)));
     		
     		//requestItems.put(tableName, jobList);
@@ -871,8 +787,7 @@ public class AmazonDynamoDBSample {
     // ======== Method for adding items in Hash map ================================     
     private static Map<String, AttributeValue> newItem(int OrderId, long OrderDate, String[] ProductId_list, 
     		String DeliveryDate, String DeliveryStatus, String DeliveredBy, int DeliveryCost, int DiscountAmount, 
-    		String TotalCost, String PaymentHistory, int Due, String CompanyName, String CompanyContacts, 
-    		String CompanyAddress, boolean Flagged)
+    		String TotalCost, int Due, String CompanyName, String CompanyAddress, boolean Flagged)
     {
 		// private static Map<String, AttributeValue> newItem(String name, int year, String rating, String... fans)
         // private static Map<String, AttributeValue> newItem(String StudentName, String RegDateTime, String[] CourseId)
@@ -881,19 +796,15 @@ public class AmazonDynamoDBSample {
 		// Add the items
     	item1.put("OrderId", new AttributeValue().withN(Integer.toString(OrderId)));
     	item1.put("OrderDate", new AttributeValue().withN(Long.toString(OrderDate)));
-    	//item1.put("OrderDate", new AttributeValue(OrderDate));
-    	item1.put("ProductId_list", new AttributeValue().withSS(ProductId_list));
-    	//item.put("Authors", new AttributeValue().withSS(Arrays.asList("Author1", "Author2"))); 	
+    	item1.put("ProductId_list", new AttributeValue().withSS(ProductId_list));	
     	item1.put("DeliveryDate", new AttributeValue().withN(DeliveryDate));
     	item1.put("DeliveryStatus", new AttributeValue(DeliveryStatus));
 		item1.put("DeliveredBy", new AttributeValue().withS(DeliveredBy));			
 		item1.put("DeliveryCost", new AttributeValue().withN(Integer.toString(DeliveryCost)));
 		item1.put("DiscountAmount", new AttributeValue().withN(Integer.toString(DiscountAmount)));
 		item1.put("TotalCost", new AttributeValue().withN(String.valueOf(TotalCost)));
-		item1.put("PaymentHistory", new AttributeValue().withS(PaymentHistory));
 		item1.put("Due", new AttributeValue().withN(String.valueOf(Due)));		
-		item1.put("CompanyName", new AttributeValue().withS(CompanyName));		
-		item1.put("CompanyContacts", new AttributeValue().withS(CompanyContacts));		
+		item1.put("CompanyName", new AttributeValue().withS(CompanyName));				
 		item1.put("CompanyAddress", new AttributeValue().withS(CompanyAddress));
 		item1.put("Flagged", new AttributeValue().withBOOL(Flagged));
         //item.put("fans", new AttributeValue().withSS(fans));
@@ -1155,6 +1066,8 @@ public class AmazonDynamoDBSample {
     // ======== Method for Printing Item ===============================================    
     private static void printItem(Map<String, AttributeValue> attributeList) 
     {
+    	Boolean stat = true; 
+    	
         for (Map.Entry<String, AttributeValue> item : attributeList.entrySet()) 
         {
             String attributeName = item.getKey();
@@ -1164,7 +1077,8 @@ public class AmazonDynamoDBSample {
             System.out.println(attributeName + " "
                     + (value.getS() == null ? "" : "[S] = " + value.getS())
                     + (value.getN() == null ? "" : "[N] = " + value.getN())
-                    + (value.getB() == null ? "" : "[B] = " + value.getB())
+                    //+ (value.getB() == null ? "" : "[B] = " + value.getB())
+                    + (value.getBOOL() == null ? "" : "[B] = " + value.getBOOL())
                     + (value.getSS() == null ? "" : "[SS] = " + value.getSS())
                     + (value.getNS() == null ? "" : "[NS] = " + value.getNS())
                     + (value.getBS() == null ? "" : "[BS] = " + value.getBS() + "\n"));
@@ -1223,7 +1137,108 @@ public class AmazonDynamoDBSample {
         }
     }
     
-    
+    /*
+     *  The BatchGetItemRequest specifies the table names and item key list for each item to get. 
+     *  http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/batch-operation-document-api-java.html#LowLevelJavaBatchWrite
+     *  
+     *  Along with the required parameters, you can also specify optional parameters when using batchGetItem. 
+     *  For example, you can provide a ProjectionExpression with each TableKeysAndAttributes you define. 
+     *  This allows you to specify the attributes that you want to retrieve from the table.
+     */
+    private static void batchGetItem(String tableName) throws Exception
+    {
+    	//String columnsToGet = "OrderId, OrderDate, CompanyName, DeliveryDate, DeliveryStatus, Due, Flagged, TotalCost";
+    	System.out.println("\n---------------------------------------------");
+    	System.out.println("BATCH GET ITEM: \n");
+    	
+        BatchGetItemResult result;
+        BatchGetItemRequest batchGetItemRequest = new BatchGetItemRequest();
+        
+    	Map<String, KeysAndAttributes> requestItems = new HashMap<String, KeysAndAttributes>();
+    	
+    	List<Map<String, AttributeValue>> tableKeys = new ArrayList<Map<String, AttributeValue>>(); 
+        
+    	Map<String, AttributeValue> key = new HashMap<String, AttributeValue>();
+        key.put("OrderId", new AttributeValue().withN("101"));   // Hash Key
+        key.put("OrderDate", new AttributeValue().withN("20141202094500"));  // Range Key
+        tableKeys.add(key);
+        
+        key = new HashMap<String, AttributeValue>();
+        key.put("OrderId", new AttributeValue().withN("102"));  
+        key.put("OrderDate", new AttributeValue().withN("20141201094500"));
+        tableKeys.add(key);
+                
+        requestItems.put(tableName, new KeysAndAttributes().withKeys(tableKeys)); 
+        
+        /*  Iterate this for another Table. 
+        tableKeys = new ArrayList<Map<String, AttributeValue>>();
+        
+        key = new HashMap<String, AttributeValue>();
+        key.put("OrderId", new AttributeValue().withN("101"));  
+        key.put("OrderDate", new AttributeValue().withN("20141201094500"));
+        tableKeys.add(key);   
+        
+        requestItems.put(table2Name, new KeysAndAttributes().withKeys(tableKeys));
+    	*/
+        
+    	try
+    	{
+            do 
+            {
+                System.out.println("- Making the request.");
+                                
+                batchGetItemRequest.withRequestItems(requestItems);
+                result = dynamoDB.batchGetItem(batchGetItemRequest);
+                                
+                List<Map<String, AttributeValue>> table1Results = result.getResponses().get(tableName); // for table 1 
+                
+                if (table1Results != null)
+                {
+                    System.out.println("- Items in table " + tableName);
+                    for (Map<String,AttributeValue> item : table1Results) 
+                    {
+                    	System.out.println("---- ");
+                        printItem(item);
+                        
+                    }
+                }
+                
+                /*  
+                 // Iterate this for another Table. 
+                 
+                List<Map<String, AttributeValue>> table2Results = result.getResponses().get(table2Name);
+                if (table2Results != null)
+                {
+                    System.out.println("\nItems in table " + table2Name);
+                    for (Map<String,AttributeValue> item : table2Results) 
+                    {
+                        printItem(item);
+                    }
+                }
+                */
+                
+                // Check for unprocessed keys which could happen if you exceed provisioned throughput or reach the limit on response size. 
+                
+                for (Map.Entry<String,KeysAndAttributes> pair : result.getUnprocessedKeys().entrySet()) 
+                {
+                    System.out.println("- Unprocessed key pair: " + pair.getKey() + ", " + pair.getValue());
+                }
+                
+                requestItems = result.getUnprocessedKeys();
+                
+            } while (result.getUnprocessedKeys().size() > 0);
+    	
+    	}
+        catch (AmazonServiceException ase) 
+        {
+        	printServiceExceptionError(ase);
+        } 
+        catch (AmazonClientException ace) 
+        {
+        	printClientExceptionError(ace);  
+        }
+    	
+    }
     // ==================================================================================
     // Section:  Miscellaneous 
     // Other methods ....  
