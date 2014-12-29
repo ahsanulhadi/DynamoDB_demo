@@ -36,6 +36,8 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.dynamodbv2.util.Tables;
 import com.amazonaws.services.dynamodbv2.model.*;
 import com.amazonaws.services.dynamodbv2.document.*;
+import com.amazonaws.services.dynamodbv2.document.spec.DeleteItemSpec;
+import com.sun.corba.se.impl.oa.poa.ActiveObjectMap.Key;
 
 /*
 import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
@@ -92,32 +94,63 @@ public class AmazonDynamoDBSample {
     // ======== Main Method ==============================================
     public static void main(String[] args) throws Exception 
     {
-        init();
-        /* ------- Example: MANAGE Table ------- */ 
-        //createTable(tableName); 		// Working OK. 
-        //describeTable(tableName);   	// Working OK.
-        //updateTable(tableName);		// Working OK.
-        //listTable();     				// Working OK.
+    	// --> init() = This is for Initializing DynamoDB connection. Don't comment out this method.
+        init();  
+        
+        /* ------- Example: MANAGE Table ------- */
+
+        //createTable(tableName); 		// Working OK. Table, Index will be created. If the table already exists then it will not be created.        
+        //describeTable(tableName);   	// Working OK.        
+        //updateTable(tableName);		// Working OK.        
+        //listTable();     				// Working OK.        
         //deleteTable(tableName);		// Working OK.
+                
         
-        /*  -------- CRUD Operations ------------ */ 
-        // examples:  http://docs.amazonaws.cn/en_us/amazondynamodb/latest/developerguide/LowLevelJavaCRUDExample.html
+        /*  -------  CRUD Operations ->> CREATE/ Add items  ------- */
+        /* examples:  http://docs.amazonaws.cn/en_us/amazondynamodb/latest/developerguide/LowLevelJavaCRUDExample.html  */
         
-        /*  -------  Example: MODIFY Data  ------- */
-        //addItems(tableName);   					// Working OK. 
-        //ConditionalUpdateItems(tableName, null); 	// Working OK. 
+        //addItems(tableName);   					// Working OK.
         //BatchWriteItems(tableName); 				// Working OK. 
+
+        
+        /*  -------  CRUD Operations ->> READ Items  -------  */       
+        // --> Search keys for GetItem, Batch Get item        
+        String[][] search_key = new String[2][2];
+        search_key[0][0] = "101";
+        search_key[0][1] = "20141202094500";
+        search_key[1][0] = "102";
+        search_key[1][1] = "20141201094500";
+        
+        //getItem(tableName, search_key[0][0], search_key[0][1]); //  Working OK. Param: String tableName, String Id, String Orderdate        
+        //batchGetItem(tableName, search_key); // Working OK.         
+        //scanItems(tableName); // Working OK.    
+        
+        // --> queryItem() method params: index_CompanyName OR index_DeliveryDate OR null         
+        String orderId ="101";	
+        String[][] search_key2 = new String[3][3];
+        search_key2[0][0] = "index_DeliveryDate";
+        search_key2[0][1] = "20141228";
+        search_key2[1][0] = "index_CompanyName";
+        search_key2[1][1] = "ABC Stationary Shop";
+        search_key2[2][0] = "null";
+        search_key2[2][1] = "null";
+        // param list: String tableName, String indexName, String key, String id)        
+        //queryItems(tableName, search_key2[0][0], search_key2[0][1], orderId); // Working OK. 
+        //queryItems(tableName, search_key2[1][0], search_key2[1][1], orderId); // Working OK. 
+        //queryItems(tableName, search_key2[2][0], search_key2[2][1], orderId); // Working OK. 
+
+        
+        /*  -------  CRUD Operations ->> UPDATE items  ------- */
+        //ConditionalUpdateItems(tableName, null); 	// Working OK. Update data Only if certain predefined conditions are met.            
+        // Perform various updates.
+        //updateMultipleAttributes();
+        //updateAddNewAttribute();
+        // updateExistingAttributeConditionally();
         
         
-        /*  -------  Example: READ Data  -------  */
-        //getItem(tableName, "101", "20141201090909");   // getItem(String tableName, String Id, String Orderdate)
-        batchGetItem(tableName);
-        //scanItems(tableName);    		// Working OK.    
-        
-        // -> Values for queryItem Index: index_CompanyName, index_DeliveryDate, null
-        //queryItems(tableName, "index_DeliveryDate"); // Working OK. 
-        //queryItems(tableName, "index_CompanyName");  // Working OK.
-        //queryItems(tableName, null); 				// Working OK.
+        /*  -------  CRUD Operations ->> DELETE items  ------- */
+        String[] key = new String[]{"101","20141201094500"};  // Hash and Range Key 
+        deleteItem(tableName, key);  // Working OK.  Will only delete the item if Condition is met (i.e. Delivery Status = Delivered)
         
     }
 
@@ -522,8 +555,8 @@ public class AmazonDynamoDBSample {
 
 
     // ==================================================================================
-    // Section:  MODIFYING DATA 
-    // Actions: Put Item / Update Item / Delete Item / Batch Write Item 
+    // Section:  CRUD Operations
+    // Actions:  CREATE items.  
     // ==================================================================================
     
 	/* 
@@ -578,69 +611,6 @@ public class AmazonDynamoDBSample {
         			20, 0, "1000", 200, "ABC Stationary Shop", CompanyAddress, false);
         	
             itemRequest = new PutItemRequest(tableName, item);
-            putItemResult= dynamoDB.putItem(itemRequest);
-            System.out.println("Add item Result: " + putItemResult);
-            item.clear();                     	
-        } 
-        catch (AmazonServiceException ase) 
-        {
-        	printServiceExceptionError(ase);
-        } 
-        catch (AmazonClientException ace) 
-        {
-        	printClientExceptionError(ace);            
-        }
-    	
-    }
-
-	// ======== Conditional Put item / Add item ============================================
-    private static void ConditionalUpdateItems(String tableName, String condition) throws Exception
-    {
-    	/*
-    	 * Use an optional parameter to specify a condition for uploading the item. 
-    	 * If the condition specified is not met, then the AWS Java SDK throws a ConditionalCheckFailedException. 
-    	 * http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/LowLevelJavaItemCRUD.html
-    	 * Example: Here we will check - 
-    	 * IF we want to update DeliveryStatus = Delivered 
-    	 * THEN for that record (orderID) Due cannot be > 0 . IF Due > 0 then don't allow the update.  
-    	 */
-    	String[] ProductId_list= new String[]{"M001","M002","P001"}; 
-
-    	String CompanyAddress = "{"
-    			+   "\"Street\": \"Road #1, Section #1, ABC Area. Post Code: 1001.\","
-    			+   "\"City\":\"Dhaka\","
-    			+   "\"Country\": \"Bangladesh\""
-    			+   "},";
-
-
-    	
-    	PutItemRequest itemRequest;
-    	PutItemResult putItemResult;
-    	// GetCurrentDateTime()
-    
-    	System.out.println("\n---------------------------------------------");
-    	System.out.println("PUT ITEM with Condition: \n");
-    
-    	try 
-        {
-			Map<String, AttributeValue> item = new HashMap<String, AttributeValue>(); // for Adding item. 
-			
-			long orderDate = 20141201090909L;   // 20141102102003
-			/*
-			newItem(int OrderId, int OrderDate, String[] ProductId_list, String DeliveryDate, String DeliveryStatus, String DeliveredBy, 
-					int DeliveryCost, int DiscountAmount, String TotalCost, int Due, String CompanyName, String json_CompanyAddress, boolean Flagged) 
-		    */
-        	item = newItem(101, orderDate, ProductId_list, GetCurrentDateTime(), "Delivered", "S.A. Paribahan", 
-        			100, 0, "1000", 0, "XYZ Stationary Shop", CompanyAddress, false);
-        	
-			Map<String, AttributeValue> expressionAttributeValues = new HashMap<String, AttributeValue>(); // for condition expression.
-			// expressionAttributeValues.put(":val", new AttributeValue().withS("Delivered")); // for Delivery Status.  
-			expressionAttributeValues.put(":val", new AttributeValue().withN("0")); // for Due
-
-            itemRequest = new PutItemRequest().withTableName(tableName).withItem(item)
-            															.withConditionExpression("Due = :val")
-            															.withExpressionAttributeValues(expressionAttributeValues)
-            															.withReturnValues(ReturnValue.ALL_OLD);
             putItemResult= dynamoDB.putItem(itemRequest);
             System.out.println("Add item Result: " + putItemResult);
             item.clear();                     	
@@ -771,6 +741,23 @@ public class AmazonDynamoDBSample {
                 // Check for unprocessed keys which could happen if you exceed provisioned throughput
                 System.out.println("Unprocessed Put and Delete requests: \n" + result.getUnprocessedItems());
                 requestItems = result.getUnprocessedItems();
+                
+                // Process the failed ones again.
+                /* 
+                Map<String, List<WriteRequest>> unprocessedItems = result.getUnprocessedItems();
+                
+                if (result.getUnprocessedItems().size() == 0) 
+                 {
+                	 System.out.println("No unprocessed items found");
+                 }
+                else 
+                 {
+                	 System.out.println("Retrieving the unprocessed items");
+                	 //result = dynamoDB.batchWriteItemUnprocessed(unprocessedItems);
+                	 result = dynamoDB.batchWriteItemUnprocessed(requestItems);
+				}
+                 */
+
             } while (result.getUnprocessedItems().size() > 0); 		
     	}
     	catch (AmazonServiceException ase) 
@@ -812,10 +799,10 @@ public class AmazonDynamoDBSample {
         return item1;
     }
 
-	
+    
     // ==================================================================================
-    // Section:  READING DATA 
-    // Actions: Get Item / Batch Get Item / Query / Scan 
+    // Section:  CRUD Operations
+    // Actions:  READ items.  
     // ==================================================================================
 
     /* < TIPS >
@@ -829,11 +816,8 @@ public class AmazonDynamoDBSample {
      */
     
     // ======== Query item using Local Secondary Index Key ===============
-    private static void queryItems(String tableName, String indexName) throws Exception
-    {
-    	String orderId ="101";
-		String CompanyName = "ABC Stationary Shop";
-		String deliveryDate = "20141220";		
+    private static void queryItems(String tableName, String indexName, String search_key, String orderId) throws Exception
+    {		
 		
 	    System.out.println("\n---------------------------------------------");
 		System.out.println("QUERY TABLE: \n");
@@ -855,26 +839,26 @@ public class AmazonDynamoDBSample {
     	
 		if (indexName == "index_CompanyName")
     	{    				
-        	System.out.println("- Query table for Order ID: " + orderId + ", Company Name: " + CompanyName + ", using index: " + indexName);
+        	System.out.println("- Query table for Order ID: " + orderId + ", Company Name: " + search_key + ", using index: " + indexName);
         	
         	// had Predefined projected attributes.  
         	queryRequest.setSelect(Select.ALL_PROJECTED_ATTRIBUTES);
         	queryRequest.setIndexName(indexName);
     		   				
     		keyConditions.put("CompanyName",new Condition().withComparisonOperator(ComparisonOperator.EQ)
-    														.withAttributeValueList(new AttributeValue().withS(CompanyName)));
+    														.withAttributeValueList(new AttributeValue().withS(search_key)));
     		            
     	}
 		else if(indexName == "index_DeliveryDate")    	
     	{
-        	System.out.println("- Query table for Order ID: " + orderId + ", Delivery Date is after: " + deliveryDate  + ", using index: " + indexName);
+        	System.out.println("- Query table for Order ID: " + orderId + ", Delivery Date is after: " + search_key  + ", using index: " + indexName);
         	
         	// This has ALL as projected attribute but we will select few
         	queryRequest.setProjectionExpression("OrderId, OrderDate, CompanyName, CompanyAddress, DeliveryDate, DeliveryStatus, Due, Flagged");
     		queryRequest.setIndexName(indexName);
     		
     		keyConditions.put("DeliveryDate",new Condition().withComparisonOperator(ComparisonOperator.GT)
-    														.withAttributeValueList(new AttributeValue().withN(deliveryDate)));
+    														.withAttributeValueList(new AttributeValue().withN(search_key)));
      
     	}
 		else
@@ -1145,11 +1129,11 @@ public class AmazonDynamoDBSample {
      *  For example, you can provide a ProjectionExpression with each TableKeysAndAttributes you define. 
      *  This allows you to specify the attributes that you want to retrieve from the table.
      */
-    private static void batchGetItem(String tableName) throws Exception
+    private static void batchGetItem(String tableName, String[][] search_key) throws Exception
     {
     	//String columnsToGet = "OrderId, OrderDate, CompanyName, DeliveryDate, DeliveryStatus, Due, Flagged, TotalCost";
     	System.out.println("\n---------------------------------------------");
-    	System.out.println("BATCH GET ITEM: \n");
+    	System.out.println("BATCH GET ITEM: \n");    	
     	
         BatchGetItemResult result;
         BatchGetItemRequest batchGetItemRequest = new BatchGetItemRequest();
@@ -1159,13 +1143,13 @@ public class AmazonDynamoDBSample {
     	List<Map<String, AttributeValue>> tableKeys = new ArrayList<Map<String, AttributeValue>>(); 
         
     	Map<String, AttributeValue> key = new HashMap<String, AttributeValue>();
-        key.put("OrderId", new AttributeValue().withN("101"));   // Hash Key
-        key.put("OrderDate", new AttributeValue().withN("20141202094500"));  // Range Key
+        key.put("OrderId", new AttributeValue().withN(search_key[0][0]));   // Hash Key
+        key.put("OrderDate", new AttributeValue().withN(search_key[0][1]));  // Range Key
         tableKeys.add(key);
         
         key = new HashMap<String, AttributeValue>();
-        key.put("OrderId", new AttributeValue().withN("102"));  
-        key.put("OrderDate", new AttributeValue().withN("20141201094500"));
+        key.put("OrderId", new AttributeValue().withN(search_key[1][0]));  
+        key.put("OrderDate", new AttributeValue().withN(search_key[1][1]));
         tableKeys.add(key);
                 
         requestItems.put(tableName, new KeysAndAttributes().withKeys(tableKeys)); 
@@ -1226,6 +1210,23 @@ public class AmazonDynamoDBSample {
                 
                 requestItems = result.getUnprocessedKeys();
                 
+                /*
+				// Check for unprocessed keys which could happen if you exceed provisioned throughput or reach the limit on response size.
+				
+				Map<String, KeysAndAttributes> unprocessedKeys = result.getUnprocessedKeys();
+			
+				if (result.getUnprocessedKeys().size() == 0) 
+				{
+					System.out.println("No unprocessed keys found");
+				} 
+				else 
+				{
+					System.out.println("Retrieving the unprocessed keys");
+					result = dynamoDB.batchGetItemUnprocessed(unprocessedKeys);
+				}
+				
+				*/
+                
             } while (result.getUnprocessedKeys().size() > 0);
     	
     	}
@@ -1237,8 +1238,127 @@ public class AmazonDynamoDBSample {
         {
         	printClientExceptionError(ace);  
         }
+
+    }
+    
+
+    // ==================================================================================
+    // Section:  CRUD Operations
+    // Actions:  UPDATE items.  
+    // ==================================================================================
+
+	// ======== Conditional add/update item ============================================
+    private static void ConditionalUpdateItems(String tableName, String condition) throws Exception
+    {
+    	/*
+    	 * Use an optional parameter to specify a condition for uploading the item. 
+    	 * If the condition specified is not met, then the AWS Java SDK throws a ConditionalCheckFailedException. 
+    	 * http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/LowLevelJavaItemCRUD.html
+    	 * Example: Here we will check - 
+    	 * IF we want to update DeliveryStatus = Delivered 
+    	 * THEN for that record (orderID) Due cannot be > 0 . IF Due > 0 then don't allow the update.  
+    	 */
+    	String[] ProductId_list= new String[]{"M001","M002","P001"}; 
+
+    	String CompanyAddress = "{"
+    			+   "\"Street\": \"Road #1, Section #1, ABC Area. Post Code: 1001.\","
+    			+   "\"City\":\"Dhaka\","
+    			+   "\"Country\": \"Bangladesh\""
+    			+   "},";
+
+
+    	
+    	PutItemRequest itemRequest;
+    	PutItemResult putItemResult;
+    	// GetCurrentDateTime()
+    
+    	System.out.println("\n---------------------------------------------");
+    	System.out.println("PUT ITEM with Condition: \n");
+    
+    	try 
+        {
+			Map<String, AttributeValue> item = new HashMap<String, AttributeValue>(); // for Adding item. 
+			
+			long orderDate = 20141201090909L;   // 20141102102003
+			/*
+			newItem(int OrderId, int OrderDate, String[] ProductId_list, String DeliveryDate, String DeliveryStatus, String DeliveredBy, 
+					int DeliveryCost, int DiscountAmount, String TotalCost, int Due, String CompanyName, String json_CompanyAddress, boolean Flagged) 
+		    */
+        	item = newItem(101, orderDate, ProductId_list, GetCurrentDateTime(), "Delivered", "S.A. Paribahan", 
+        			100, 0, "1000", 0, "XYZ Stationary Shop", CompanyAddress, false);
+        	
+			Map<String, AttributeValue> expressionAttributeValues = new HashMap<String, AttributeValue>(); // for condition expression.
+			// expressionAttributeValues.put(":val", new AttributeValue().withS("Delivered")); // for Delivery Status.  
+			expressionAttributeValues.put(":val", new AttributeValue().withN("0")); // for Due
+
+            itemRequest = new PutItemRequest().withTableName(tableName).withItem(item)
+            															.withConditionExpression("Due = :val")
+            															.withExpressionAttributeValues(expressionAttributeValues)
+            															.withReturnValues(ReturnValue.ALL_OLD);
+            putItemResult= dynamoDB.putItem(itemRequest);
+            System.out.println("Add item Result: " + putItemResult);
+            item.clear();                     	
+        } 
+        catch (AmazonServiceException ase) 
+        {
+        	printServiceExceptionError(ase);
+        } 
+        catch (AmazonClientException ace) 
+        {
+        	printClientExceptionError(ace);            
+        }
     	
     }
+    
+
+    // ==================================================================================
+    // Section:  CRUD Operations
+    // Actions:  DELETE items.  
+    // ==================================================================================
+    
+    private static void deleteItem(String tableName, String[] key) throws Exception
+    {
+    	// Table table = dynamoDB.getTable(tableName);
+		System.out.println("\n---------------------------------------------");
+		System.out.println("DELETE Item: Where OrderId= " + key[0] + " and Order Date = " + key[1] + "\n");
+
+		try
+		{
+			// Hash and Range key for that Table.
+			Map<String, AttributeValue> keyValues = new HashMap<String, AttributeValue>();
+			keyValues.put("OrderId", new AttributeValue().withN(key[0]));
+			keyValues.put("OrderDate", new AttributeValue().withN(key[1]));
+
+			// Conditional Value Map			
+			Map<String, AttributeValue> expressionAttributeValues = new HashMap<String, AttributeValue>(); // for condition expression.
+			expressionAttributeValues.put(":val", new AttributeValue().withS("Delivered"));			
+
+			// create our request
+			DeleteItemRequest deleteItemRequest = new DeleteItemRequest().withTableName(tableName)
+																		 .withKey(keyValues)
+																		 .withConditionExpression("DeliveryStatus = :val")
+																		 .withExpressionAttributeValues(expressionAttributeValues)
+																		 .withReturnValues(ReturnValue.ALL_OLD);
+																		 
+			// process the delete request
+			DeleteItemResult result = dynamoDB.deleteItem(deleteItemRequest);
+            System.out.println("- Printing item that was deleted...");
+            printItem(result.getAttributes());
+			
+		}
+        catch (AmazonServiceException ase) 
+        {
+        	printServiceExceptionError(ase);
+        } 
+        catch (AmazonClientException ace) 
+        {
+        	printClientExceptionError(ace);
+        }		
+
+	}
+	
+	
+    
     // ==================================================================================
     // Section:  Miscellaneous 
     // Other methods ....  
