@@ -94,6 +94,8 @@ public class AmazonDynamoDBSample {
     // ======== Main Method ==============================================
     public static void main(String[] args) throws Exception 
     {
+    	String[] key = new String[]{"101","20141202094500"};
+    	
     	// --> init() = This is for Initializing DynamoDB connection. Don't comment out this method.
         init();  
         
@@ -141,16 +143,16 @@ public class AmazonDynamoDBSample {
 
         
         /*  -------  CRUD Operations ->> UPDATE items  ------- */
-        //ConditionalUpdateItems(tableName, null); 	// Working OK. Update data Only if certain predefined conditions are met.            
-        // Perform various updates.
-        //updateMultipleAttributes();
-        //updateAddNewAttribute();
-        // updateExistingAttributeConditionally();
+        key[0] = "101"; 
+        key[1] = "20141202094500";  // Hash and Range Key 
+        //ConditionalUpdateItems(tableName, key); 	// Working OK. Will update the item ONLY IF current delivery Status <> "Delivered"     
         
+        MultipleAttrUpdate(tableName, key); // Working OK.
         
         /*  -------  CRUD Operations ->> DELETE items  ------- */
-        String[] key = new String[]{"101","20141201094500"};  // Hash and Range Key 
-        deleteItem(tableName, key);  // Working OK.  Will only delete the item if Condition is met (i.e. Delivery Status = Delivered)
+        key[0] = "101"; 
+        key[1] = "20141201094500";  // Hash and Range Key 
+        // deleteItem(tableName, key);  // Working OK.  Will only delete the item if Condition is met (i.e. Delivery Status = Delivered)
         
     }
 
@@ -1248,7 +1250,7 @@ public class AmazonDynamoDBSample {
     // ==================================================================================
 
 	// ======== Conditional add/update item ============================================
-    private static void ConditionalUpdateItems(String tableName, String condition) throws Exception
+    private static void ConditionalUpdateItems(String tableName, String[] key) throws Exception
     {
     	/*
     	 * Use an optional parameter to specify a condition for uploading the item. 
@@ -1266,8 +1268,6 @@ public class AmazonDynamoDBSample {
     			+   "\"Country\": \"Bangladesh\""
     			+   "},";
 
-
-    	
     	PutItemRequest itemRequest;
     	PutItemResult putItemResult;
     	// GetCurrentDateTime()
@@ -1279,25 +1279,32 @@ public class AmazonDynamoDBSample {
         {
 			Map<String, AttributeValue> item = new HashMap<String, AttributeValue>(); // for Adding item. 
 			
-			long orderDate = 20141201090909L;   // 20141102102003
+			//long orderDate = Long.parseLong(key[1]) ;   // 20141102102003
+			
 			/*
 			newItem(int OrderId, int OrderDate, String[] ProductId_list, String DeliveryDate, String DeliveryStatus, String DeliveredBy, 
 					int DeliveryCost, int DiscountAmount, String TotalCost, int Due, String CompanyName, String json_CompanyAddress, boolean Flagged) 
 		    */
-        	item = newItem(101, orderDate, ProductId_list, GetCurrentDateTime(), "Delivered", "S.A. Paribahan", 
-        			100, 0, "1000", 0, "XYZ Stationary Shop", CompanyAddress, false);
+        	item = newItem(Integer.parseInt(key[0]), Long.parseLong(key[1]), ProductId_list, GetCurrentDateTime(), "Pending", "S.A. Paribahan", 
+        			100, 0, "5000", 900, "XYZ Stationary Shop", CompanyAddress, false);
         	
 			Map<String, AttributeValue> expressionAttributeValues = new HashMap<String, AttributeValue>(); // for condition expression.
-			// expressionAttributeValues.put(":val", new AttributeValue().withS("Delivered")); // for Delivery Status.  
-			expressionAttributeValues.put(":val", new AttributeValue().withN("0")); // for Due
+			expressionAttributeValues.put(":val", new AttributeValue().withS("Pending")); // for Delivery Status.  
+			//expressionAttributeValues.put(":val", new AttributeValue().withN("0")); // for Due
 
             itemRequest = new PutItemRequest().withTableName(tableName).withItem(item)
-            															.withConditionExpression("Due = :val")
+            															.withConditionExpression("DeliveryStatus = :val")
             															.withExpressionAttributeValues(expressionAttributeValues)
             															.withReturnValues(ReturnValue.ALL_OLD);
             putItemResult= dynamoDB.putItem(itemRequest);
-            System.out.println("Add item Result: " + putItemResult);
+            //System.out.println("Add item Result: " + putItemResult);            
             item.clear();                     	
+            
+            
+    		Map<String, AttributeValue> outputItem = putItemResult.getAttributes();
+    		printItem(outputItem);
+    		
+    		
         } 
         catch (AmazonServiceException ase) 
         {
@@ -1310,6 +1317,94 @@ public class AmazonDynamoDBSample {
     	
     }
     
+    private static void MultipleAttrUpdate(String tableName, String[] key) throws Exception
+    {
+    	try
+    	{
+            Map<String, AttributeValueUpdate> updateItems = new HashMap<String, AttributeValueUpdate>();
+
+			HashMap<String, AttributeValue> keyValue = new HashMap<String, AttributeValue>();
+			keyValue.put("OrderId", new AttributeValue().withN(key[0]));
+			keyValue.put("OrderDate", new AttributeValue().withN(key[1]));
+			
+			
+			/* ==================================================================================
+			 * --> withAction(AttributeAction := 
+			 * ================================================================================== 
+			 */
+			
+			
+			/* ADD: If the attribute does not already exist, then the attribute and its values are added to the item. If the attribute does exist, 
+			 * then the behavior of ADD depends on the data type of the attribute: If the existing attribute is a number, and if Value is also a number, then the Value is mathematically added to the 
+			 * existing attribute. If Value is a negative number, then it is subtracted from the existing attribute. 
+			 * If you use ADD to increment or decrement a number value for an item that doesn't exist before the update, DynamoDB uses 0 as 
+			 * the initial value.
+			 */
+			
+			// Adds 300 with current Due. 
+			//--> updateItems.put("Due", new AttributeValueUpdate().withAction(AttributeAction.ADD).withValue(new AttributeValue().withN("300")));
+			
+			/*
+			 * If the existing data type is a set, and if the Value is also a set, then the Value is added to the existing set. 
+			 * (This is a set operation, not mathematical addition.) For example, if the attribute value was the set [1,2], and the ADD action 
+			 * specified [3], then the final attribute value would be [1,2,3]. An error occurs if an Add action is specified for a set 
+			 * attribute and the attribute type specified does not match the existing set type. Both sets must have the same primitive data type. 
+			 * For example, if the existing data type is a set of strings, the Value must also be a set of strings. The same holds true for number sets and 
+			 * binary sets.
+			 * 
+			 *  This action is only valid for an existing attribute whose data type is number or is a set. Do not use ADD for any other data types. 
+			 */
+			
+			// Adds 2 new product ID to the existing Set. 
+			//--> updateItems.put("ProductId_list", new AttributeValueUpdate().withAction(AttributeAction.ADD).withValue(new AttributeValue().withSS("M003", "SP01")));
+						
+			/*
+			 * PUT - If an item with the specified Key is found in the table: Then it Adds the specified attribute to the item. 
+			 * If the attribute already exists, it is replaced by the new value. 
+			 * If no item with the specified Key is found: 
+			 * PUT - DynamoDB creates a new item with the specified primary key, and then adds the attribute. 
+			 */
+			
+			// PUT: "NewAttribute" doesn't exist, so will be added. 
+			//updateItems.put("NewAttribute", new AttributeValueUpdate().withValue(new AttributeValue().withS("someValue")));  OR   
+			// --> updateItems.put("NewAttribute", new AttributeValueUpdate().withAction(AttributeAction.PUT).withValue(new AttributeValue().withS("someValue")));
+
+			// Update TotalCost to 0
+			updateItems.put("TotalCost", new AttributeValueUpdate().withAction(AttributeAction.PUT).withValue(new AttributeValue().withN("0")));
+
+			/*
+			 * If an item with the specified Key is found in the table: 
+			 * DELETE - If no value is specified, the attribute and its value are removed from the item. 
+			 * The data type of the specified value must match the existing value's data type.
+			 * If no item with the specified Key is found:
+			 * DELETE - Nothing happens; there is no attribute to delete.
+			 */
+			
+			// Delete "NewAttribute" attribute
+			//--> updateItems.put("NewAttribute", new AttributeValueUpdate().withAction(AttributeAction.DELETE));
+
+			// Now EXECUTE the UPDATE operation 
+			UpdateItemRequest updateItemRequest = new UpdateItemRequest().withTableName(tableName)
+																		 .withKey(keyValue)
+																		 .withAttributeUpdates(updateItems)
+																		 .withReturnValues(ReturnValue.ALL_NEW);
+			
+			UpdateItemResult result = dynamoDB.updateItem(updateItemRequest);
+			
+			// Check the response.
+			System.out.println("- Printing item after multiple attribute update...");
+			printItem(result.getAttributes());            
+    	}
+        catch (AmazonServiceException ase) 
+        {
+        	printServiceExceptionError(ase);
+        } 
+        catch (AmazonClientException ace) 
+        {
+        	printClientExceptionError(ace);            
+        }
+    	
+    }
 
     // ==================================================================================
     // Section:  CRUD Operations
