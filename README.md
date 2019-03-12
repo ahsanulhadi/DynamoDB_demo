@@ -19,7 +19,8 @@ OS: Windows 8 (64bit)</pre>
 ---------------------
 
 This is a general application to demonstarte and test all the Amazon DynamoDB provided low-level API actions. 
-The following are the low-level API actions, organized by function. 
+The following are the low-level API actions, organized by function. For details, please check here:
+https://github.com/ahsanulhadi/DynamoDB_demo/blob/master/DynamoDB_Notes.pdf
 
 **Managing Tables:**  
 
